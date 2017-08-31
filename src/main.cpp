@@ -12,6 +12,9 @@
 // for convenience
 using json = nlohmann::json;
 
+// latency in milli seconds
+const int LATENCY = 100;
+
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
@@ -41,6 +44,15 @@ double polyeval(Eigen::VectorXd coeffs, double x) {
   return result;
 }
 
+// calculate the f'(x)
+double derivative_eval(Eigen::VectorXd coeffs, double x) {
+  double result = 0.0;
+  for (int i = 1; i < coeffs.size(); i++) {
+    result += i* coeffs[i] * pow(x, i-1);
+  }
+  return result;
+}
+
 // Fit a polynomial.
 // Adapted from
 // https://github.com/JuliaMath/Polynomials.jl/blob/master/src/Polynomials.jl#L676-L716
@@ -65,6 +77,21 @@ Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
   return result;
 }
 
+/**
+Transform to vehicle's co-ordinate system
+**/
+vector<double> transform(double mapx, double mapy, double vehx, double vehy, double psi) {
+  vector<double> ret;
+  double dx = mapx - vehx;
+  double dy = mapy - vehy;
+  double r = sqrt(dx*dx + dy*dy);
+  double angle2 = atan2(mapy-vehy, mapx - vehx);
+  double angle = angle2-psi;
+  ret.push_back(r*cos(angle));
+  ret.push_back(r*sin(angle));
+  return ret;
+}
+
 int main() {
   uWS::Hub h;
 
@@ -85,41 +112,109 @@ int main() {
         string event = j[0].get<string>();
         if (event == "telemetry") {
           // j[1] is the data JSON object
-          vector<double> ptsx = j[1]["ptsx"];
-          vector<double> ptsy = j[1]["ptsy"];
+         vector<double> ptsx = j[1]["ptsx"];
+         vector<double> ptsy = j[1]["ptsy"];
           double px = j[1]["x"];
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          // applying th effects of latency
+          double v_metre_sec = v *  1.6 * 1000 / (60*60);
+          px += v_metre_sec * (LATENCY/1000.) * cos(psi);
+          py += v_metre_sec * (LATENCY/1000.) * sin(psi);
+
+          //Display the MPC predicted trajectory 
+          vector<double> mpc_x_vals;
+          vector<double> mpc_y_vals;
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+          Eigen::VectorXd xvals(ptsx.size());
+          Eigen::VectorXd yvals(ptsy.size());
+          for(int i=0; i< ptsx.size(); i++){
+            
+            xvals[i] = ptsx[i];
+            yvals[i] = ptsy[i];
+          }
+          // The polynomial is fitted to a straight line so a polynomial with
+          // order 1 is sufficient.
+          auto coeffs = polyfit(xvals, yvals, 1);
+
+          // The cross track error is calculated by evaluating at polynomial at x, f(x)
+          // and subtracting y.
+          double cte = py - polyeval(coeffs, px) ;
+          // Due to the sign starting at 0, the orientation error is -f'(x).
+          // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
+          /*
+          double x1 = 5;
+          double y1 = polyeval(coeffs, x1);
+          double y0 = polyeval(coeffs, 0);
+          double psi_ref = atan2(y1-y0, x1);
+          */
+
+          //double epsi = psi - psi_ref;
+          double psi_transformed=0.;
+          double epsi = psi - atan2(derivative_eval(coeffs, px), px);
+
+          Eigen::VectorXd state(6);
+          double px_transformed =0.;
+          double py_transformed= 0.;
+          state << px, py, psi, v, cte, epsi;
+
+          auto vars = mpc.Solve(state, coeffs, mpc_x_vals, mpc_y_vals);
+
+          double steer_value=0.;
+          double throttle_value=0.;
+          if (vars[0]) {
+            steer_value=vars[7];
+            throttle_value=vars[8];
+          }
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
+          steer_value = - steer_value;
+          /*
+          double limit_turn = deg2rad(10);
+          if (steer_value > limit_turn) {
+              steer_value = limit_turn;
+          } else if (steer_value < -limit_turn) {
+            steer_value = -limit_turn;
+          }
+          */
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
-          //Display the MPC predicted trajectory 
-          vector<double> mpc_x_vals;
-          vector<double> mpc_y_vals;
+
+
+          //Display the waypoints/reference line
+          vector<double> next_x_vals;
+          vector<double> next_y_vals;
+          
+           for(int i=0; i< ptsx.size(); i++){
+              vector<double> v = transform(ptsx[i], ptsy[i], px, py, psi);
+              next_x_vals.push_back(v[0]);
+              next_y_vals.push_back(v[1]);
+           }
+           
+          for(int i=0; i< mpc_x_vals.size(); i++) {
+              vector<double> v2 = transform(mpc_x_vals[i], mpc_y_vals[i], px, py, psi);
+              mpc_x_vals[i] = v2[0];
+              mpc_y_vals[i] = v2[1];
+          }
+          
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
-
-          //Display the waypoints/reference line
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
+          
+          
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
@@ -139,7 +234,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          this_thread::sleep_for(chrono::milliseconds(100));
+          this_thread::sleep_for(chrono::milliseconds(LATENCY));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
