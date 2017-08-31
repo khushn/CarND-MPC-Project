@@ -6,24 +6,14 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 5;
-double dt = .3;
+size_t N = 6;
+double dt = .125;
 
-// This value assumes the model presented in the classroom is used.
-//
-// It was obtained by measuring the radius formed by running the vehicle in the
-// simulator around in a circle with a constant steering angle and velocity on a
-// flat terrain.
-//
-// Lf was tuned until the the radius formed by the simulating the model
-// presented in the classroom matched the previous radius.
-//
-// This is the length from front to CoG that has a similar radius.
-const double Lf = 2.67;
+
 
 // NOTE: feel free to play around with this
 // or do something completely different
-double ref_v = 20;
+double ref_v = 40;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -75,7 +65,7 @@ class FG_eval {
     }
 
     
-    /**
+    
     // Minimize the use of actuators.
     for (int t = 0; t < N - 1; t++) {
       fg[0] += CppAD::pow(vars[delta_start + t], 2);
@@ -87,7 +77,7 @@ class FG_eval {
       fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
-    **/
+    
 
     //
     // Setup Constraints

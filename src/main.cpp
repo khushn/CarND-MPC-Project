@@ -82,6 +82,8 @@ Transform to vehicle's co-ordinate system
 **/
 vector<double> transform(double mapx, double mapy, double vehx, double vehy, double psi) {
   vector<double> ret;
+
+  
   double dx = mapx - vehx;
   double dy = mapy - vehy;
   double r = sqrt(dx*dx + dy*dy);
@@ -89,6 +91,13 @@ vector<double> transform(double mapx, double mapy, double vehx, double vehy, dou
   double angle = angle2-psi;
   ret.push_back(r*cos(angle));
   ret.push_back(r*sin(angle));
+  
+  /**
+  // Tried as per https://discussions.udacity.com/t/coordinate-transform/241288/4
+  // it doesn't work for me. So coded my own logic above
+  ret.push_back(mapx + vehx* cos(psi) - vehy* sin(psi));
+  ret.push_back(mapy + vehx* sin(psi) + vehy * cos(psi));
+  **/
   return ret;
 }
 
@@ -118,11 +127,16 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double delta = j[1]["steering_angle"];
+          double a = j[1]["throttle"];
 
           // applying th effects of latency
+          double latency_ms = (LATENCY/1000.);
           double v_metre_sec = v *  1.6 * 1000 / (60*60);
-          px += v_metre_sec * (LATENCY/1000.) * cos(psi);
-          py += v_metre_sec * (LATENCY/1000.) * sin(psi);
+          px += v_metre_sec * latency_ms* cos(psi);
+          py += v_metre_sec * latency_ms * sin(psi);
+          psi += -1 * v*delta/Lf*latency_ms;
+          v += a * latency_ms;
 
           //Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;
@@ -136,9 +150,9 @@ int main() {
           Eigen::VectorXd xvals(ptsx.size());
           Eigen::VectorXd yvals(ptsy.size());
           for(int i=0; i< ptsx.size(); i++){
-            
-            xvals[i] = ptsx[i];
-            yvals[i] = ptsy[i];
+            vector<double> v = transform(ptsx[i], ptsy[i], px, py, psi);
+            xvals[i] = v[0];
+            yvals[i] = v[1];
           }
           // The polynomial is fitted to a straight line so a polynomial with
           // order 1 is sufficient.
@@ -158,12 +172,12 @@ int main() {
 
           //double epsi = psi - psi_ref;
           double psi_transformed=0.;
-          double epsi = psi - atan2(derivative_eval(coeffs, px), px);
+          double epsi = psi_transformed - atan2(derivative_eval(coeffs, 0.), 0.);
 
           Eigen::VectorXd state(6);
           double px_transformed =0.;
           double py_transformed= 0.;
-          state << px, py, psi, v, cte, epsi;
+          state << px_transformed, py_transformed, psi_transformed, v, cte, epsi;
 
           auto vars = mpc.Solve(state, coeffs, mpc_x_vals, mpc_y_vals);
 
@@ -195,17 +209,11 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
           
-           for(int i=0; i< ptsx.size(); i++){
-              vector<double> v = transform(ptsx[i], ptsy[i], px, py, psi);
-              next_x_vals.push_back(v[0]);
-              next_y_vals.push_back(v[1]);
+           for(int i=0; i< ptsx.size(); i++){              
+              next_x_vals.push_back(xvals[i]);
+              next_y_vals.push_back(yvals[i]);
            }
            
-          for(int i=0; i< mpc_x_vals.size(); i++) {
-              vector<double> v2 = transform(mpc_x_vals[i], mpc_y_vals[i], px, py, psi);
-              mpc_x_vals[i] = v2[0];
-              mpc_y_vals[i] = v2[1];
-          }
           
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
