@@ -15,15 +15,23 @@ So we do the transformation of all the x,y values using the function shown below
 vector<double> transform(double mapx, double mapy, double vehx, double vehy, double psi) {
 
   vector<double> ret;
+
   double dx = mapx - vehx;
+
   double dy = mapy - vehy;
+
   double r = sqrt(dx*dx + dy*dy);
+
   double angle2 = atan2(mapy-vehy, mapx - vehx);
+
   double angle = angle2-psi;
+
   ret.push_back(r*cos(angle));
+
   ret.push_back(r*sin(angle));
-  return ret;
   
+  return ret;
+
 }
 </blockquote>>
 
