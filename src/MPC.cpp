@@ -7,13 +7,13 @@ using CppAD::AD;
 
 // TODO: Set the timestep length and duration
 size_t N = 7;
-double dt = .100;
+double dt = .080;
 
 
 
 // NOTE: feel free to play around with this
 // or do something completely different
-double ref_v = 50;
+double ref_v = 60;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
