@@ -149,6 +149,7 @@ int main() {
           */
           Eigen::VectorXd xvals(ptsx.size());
           Eigen::VectorXd yvals(ptsy.size());
+          // We leave out the first and last point
           for(int i=0; i< ptsx.size(); i++){
             vector<double> v = transform(ptsx[i], ptsy[i], px, py, psi);
             xvals[i] = v[0];
@@ -156,7 +157,7 @@ int main() {
           }
           // The polynomial is fitted to a straight line so a polynomial with
           // order 1 is sufficient.
-          auto coeffs = polyfit(xvals, yvals, 1);
+          auto coeffs = polyfit(xvals, yvals, 2);
 
           // The cross track error is calculated by evaluating at polynomial at x, f(x)
           // and subtracting y.

@@ -6,14 +6,14 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 7;
-double dt = .080;
+size_t N = 6;
+double dt = .100;
 
 
 
 // NOTE: feel free to play around with this
 // or do something completely different
-double ref_v = 60;
+double ref_v = 40;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -38,7 +38,7 @@ class FG_eval {
   AD<double> polyeval(AD<double> x) {
     AD<double> result = 0.0;
     for (int i = 0; i < coeffs.size(); i++) {
-      result += coeffs[i] * pow(x, i);
+      result += coeffs[i] * CppAD::pow(x, i);
     }
     return result;
   }
@@ -47,7 +47,7 @@ class FG_eval {
   AD<double> derivative_eval(AD<double> x) {
     AD<double> result = 0.0;
     for (int i = 1; i < coeffs.size(); i++) {
-      result += i* coeffs[i] * pow(x, i-1);
+      result += i* coeffs[i] * CppAD::pow(x, i-1);
     }
     return result;
   }
@@ -64,6 +64,7 @@ class FG_eval {
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
+    
     // Minimize the use of actuators.
     for (int t = 0; t < N - 1; t++) {
       fg[0] += CppAD::pow(vars[delta_start + t], 2);
@@ -118,8 +119,10 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
-      AD<double> f0 = polyeval(x0);
-      AD<double> psides0 = CppAD::atan(derivative_eval(x0));
+      //AD<double> f0 = polyeval(x0);
+      //AD<double> psides0 = CppAD::atan(derivative_eval(x0));
+      AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2);
+      AD<double> psides0 = CppAD::atan( coeffs[1] + 2 * coeffs[2] * x0);
 
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.
