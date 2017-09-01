@@ -2,7 +2,7 @@
 
 
 #### Approach
-We use a MPC controller, which is in simple terms curve fitting. 
+We use a MPC controller, which is in simple terms curve fitting. Or finding out the minimal area between two curves, given goals and constraints.
 
 ##### Transformation of values to car co-ordinates
 This is of paramount importance. Else we struggle with the CTE. The CTE depends on the difference between y coordinate and the refernce path (returned by the polyfit described below). 
