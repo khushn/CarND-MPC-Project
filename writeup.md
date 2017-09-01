@@ -13,9 +13,8 @@ So we do the transformation of all the x,y values using the function shown below
 
 <blockquote>
 vector<double> transform(double mapx, double mapy, double vehx, double vehy, double psi) {
-  vector<double> ret;
 
-  
+  vector<double> ret;
   double dx = mapx - vehx;
   double dy = mapy - vehy;
   double r = sqrt(dx*dx + dy*dy);
@@ -24,6 +23,7 @@ vector<double> transform(double mapx, double mapy, double vehx, double vehy, dou
   ret.push_back(r*cos(angle));
   ret.push_back(r*sin(angle));
   return ret;
+  
 }
 </blockquote>>
 
