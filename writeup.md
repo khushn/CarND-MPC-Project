@@ -11,7 +11,7 @@ This is of paramount importance. Else we struggle with the CTE. The CTE depends 
 
 So we do the transformation of all the x,y values using the function shown below: 
 
-<code>
+<blockquote>
 vector<double> transform(double mapx, double mapy, double vehx, double vehy, double psi) {
   vector<double> ret;
 
@@ -25,7 +25,7 @@ vector<double> transform(double mapx, double mapy, double vehx, double vehy, dou
   ret.push_back(r*sin(angle));
   return ret;
 }
-</code>
+</blockquote>>
 
 ##### polyfit
 We use the given set of x,y values and use the 
