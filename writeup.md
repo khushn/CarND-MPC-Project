@@ -29,14 +29,23 @@ vector<double> transform(double mapx, double mapy, double vehx, double vehy, dou
   ret.push_back(r*cos(angle));
 
   ret.push_back(r*sin(angle));
-  
+
   return ret;
 
 }
-</blockquote>>
+</blockquote>
 
 ##### polyfit
 We use the given set of x,y values and use the 
 <code>auto coeffs = polyfit(xvals, yvals, 4); </code> 
 to get a 4th order equation. 4th oder equation should take care of all kinds of crazy curves, as learnt in an earlier Math lesson. Also if the actual need is of a lesser order function, I believe the <code> polyfit() </code> method should take care of it, by returning high order coefficients as zero values.
+
+##### State
+The state comprises of 6 fields, which are: 
+<code>
+state << px_transformed, py_transformed, psi_transformed, v, cte, epsi;
+</code>
+
+The *_transformed names imply that they have been transformed to car coordinates.
+
 
