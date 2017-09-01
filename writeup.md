@@ -92,7 +92,7 @@ Another intersting point is. Its not necessary that if you have a higher N, then
 Bottom line both N and dt have to be carefully selected.
 
 ##### Latency
-It was advided to use a latency value of 100 milli seconds. This is to similate real world conditions, where actuators - Gas and steering wheel changes take some time to take effect. The effect of latency is incorporated, by adjusting the values got from the simulator by advancing all values  (px, py, psi. a, v) for a time of 100 msec. This is done using the same update equations.
+It was advided to use a latency value of 100 milli seconds. This is to simulate real world conditions, where actuators - Gas and steering wheel changes take some time to take effect. The effect of latency is incorporated, by adjusting the values got from the simulator by advancing all values  (px, py, psi. a, v) for a time of 100 msec. This is done using the same update equations.
 
 ##### Summary
 I was able to reach a max speed of 70 mph. In which the Car was able to do multiple rounds while staying on the driveable portion. Albiet, the driving is a bit risque. Its pretty stable at speeds below or around 50 mph. I tried for 80 but was not successful. 
