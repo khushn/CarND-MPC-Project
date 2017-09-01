@@ -6,14 +6,14 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 6;
-double dt = .125;
+size_t N = 7;
+double dt = .100;
 
 
 
 // NOTE: feel free to play around with this
 // or do something completely different
-double ref_v = 40;
+double ref_v = 50;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -64,8 +64,6 @@ class FG_eval {
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
-    
-    
     // Minimize the use of actuators.
     for (int t = 0; t < N - 1; t++) {
       fg[0] += CppAD::pow(vars[delta_start + t], 2);
@@ -77,6 +75,8 @@ class FG_eval {
       fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
+    
+    
     
 
     //
@@ -199,7 +199,7 @@ vector<double> MPC::Solve(Eigen::VectorXd x0, Eigen::VectorXd coeffs,
   // The upper and lower limits of delta are set to -25 and 25
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
-  double lim_radians = 10 * M_PI / 180;
+  double lim_radians = 25 * M_PI / 180;
   for (int i = delta_start; i < a_start; i++) {
     vars_lowerbound[i] = -lim_radians;
     vars_upperbound[i] = lim_radians;
