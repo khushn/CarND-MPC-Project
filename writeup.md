@@ -58,7 +58,7 @@ Techincally the code of these libraries does curve fitting using the model, cons
 ##### Update equations
 Are the ones described in class. Shown below: 
 
-<code>
+<blockquote>
 fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
 
 fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
@@ -69,7 +69,28 @@ fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
 
 fg[1 + cte_start + t] =
   cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
-  
+
 fg[1 + epsi_start + t] =
   epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
-</code>
+</blockquote>
+
+##### Cost 
+The cost specification is the critical part of MPC. I used all the things suggested in the class - CTE, ePsy, velocity reference delta, acceleration (absolute and its change rate), steering angle (absolute and its change rate). 
+
+The code for that is added in the <code> () </code> operator of FG_eval class.
+
+##### Constraints 
+Other constraints of the model are specificed in the <code> MPC::Solve() </code> method. 
+
+##### Hyper parameters
+The values to tune and N and dt (T is just N* dt). I was able to reach max velocity of 70 miles/hour . For N = 6 and dt = 0.072 seconds (72 milli seconds). I am checking in the code with the same values. 
+
+The value of dt is particularly very important, as it approximates the next step of the vehicle, before we come back to the calculation again. And so it should plan for roughly around 100 msec (which is the latency time). Keeping it too short, results in Car dancing left/right on the track. Having it too high, is meaningless, as ideally it should be on the lower side for accuracy.
+
+##### Latency
+It was advided to use a latency value of 100 milli seconds. This is to similate real world conditions, where actuators - Gas and steering wheel changes take some time to take effect. The effect of latency is incorporated, by adjusting the values got from the simulator by advancing all values  (px, py, psi. a, v) for a time of 100 msec. This is done using the same update equations.
+
+##### Summary
+I was able to reach a max speed of 70 mph. In which the Car was able to do multiple rounds while staying on the driveable portion. Albiet, the driving is a bit risque. Its pretty stable at speeds below or around 50 mph. I tried for 80 but was not successful. 
+
+My main learning is that, this is primarily curve fitting. That is, trying to draw a curve parallel to the reference curve, having as less a gap in between them, but with some goals and constraints. The goals are things like having the car move at all, and at good speed. The constraints come in the form of real world issues e.g. steering angle within limit, driving to be bit smooth etc. etc. And also coupled with latency, the problem becomes indeed very difficult. 
