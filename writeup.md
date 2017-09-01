@@ -55,16 +55,21 @@ The actuators of the system are acceleration and steering angle. These are the m
 
 Techincally the code of these libraries does curve fitting using the model, constraints and cost defined, and predicts the next N steps, and also gives the actuators at each step (so they are N - 1 in count)
 
-##### Udate equations
+##### Update equations
 Are the ones described in class. Shown below: 
 
 <code>
 fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
+
 fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
+
 fg[1 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
+
 fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
+
 fg[1 + cte_start + t] =
   cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
+  
 fg[1 + epsi_start + t] =
   epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
 </code>
