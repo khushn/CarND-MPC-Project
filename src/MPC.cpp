@@ -6,14 +6,14 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 6;
-double dt = .100;
+size_t N = 7;
+double dt = .073;
 
 
 
 // NOTE: feel free to play around with this
 // or do something completely different
-double ref_v = 40;
+double ref_v = 70;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -119,10 +119,10 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
-      //AD<double> f0 = polyeval(x0);
-      //AD<double> psides0 = CppAD::atan(derivative_eval(x0));
-      AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2);
-      AD<double> psides0 = CppAD::atan( coeffs[1] + 2 * coeffs[2] * x0);
+      AD<double> f0 = polyeval(x0);
+      AD<double> psides0 = CppAD::atan(derivative_eval(x0));
+      //AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2);
+      //AD<double> psides0 = CppAD::atan( coeffs[1] + 2 * coeffs[2] * x0);
 
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.

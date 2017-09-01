@@ -131,12 +131,12 @@ int main() {
           double a = j[1]["throttle"];
 
           // applying th effects of latency
-          double latency_ms = (LATENCY/1000.);
+          double latency_sec = (LATENCY/1000.);
           double v_metre_sec = v *  1.6 * 1000 / (60*60);
-          px += v_metre_sec * latency_ms* cos(psi);
-          py += v_metre_sec * latency_ms * sin(psi);
-          psi += -1 * v*delta/Lf*latency_ms;
-          v += a * latency_ms;
+          px += v_metre_sec * latency_sec* cos(psi);
+          py += v_metre_sec * latency_sec * sin(psi);
+          psi += -1 * v_metre_sec* latency_sec * delta/Lf;
+          v += a * latency_sec;
 
           //Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;
@@ -157,11 +157,11 @@ int main() {
           }
           // The polynomial is fitted to a straight line so a polynomial with
           // order 1 is sufficient.
-          auto coeffs = polyfit(xvals, yvals, 2);
+          auto coeffs = polyfit(xvals, yvals, 4);
 
           // The cross track error is calculated by evaluating at polynomial at x, f(x)
           // and subtracting y.
-          double cte = py - polyeval(coeffs, px) ;
+          double cte = 0. - polyeval(coeffs, 0.) ;
           // Due to the sign starting at 0, the orientation error is -f'(x).
           // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
           /*
@@ -173,7 +173,7 @@ int main() {
 
           //double epsi = psi - psi_ref;
           double psi_transformed=0.;
-          double epsi = psi_transformed - atan2(derivative_eval(coeffs, 0.), 0.);
+          double epsi = psi_transformed - atan(derivative_eval(coeffs, 0.));
 
           Eigen::VectorXd state(6);
           double px_transformed =0.;
@@ -192,7 +192,8 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          steer_value = - steer_value;
+          // we need to set -ve it don't reverse the psi update eqn
+          steer_value = -steer_value; 
           /*
           double limit_turn = deg2rad(10);
           if (steer_value > limit_turn) {
